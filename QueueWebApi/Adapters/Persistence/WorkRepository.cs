@@ -78,7 +78,7 @@ namespace QueueWebApi.Adapters.Persistence
             while (result.Read())
             {
                 works.Add(new Work(
-                    result.GetInt64(0),
+                    result.GetString(0),
                     result.GetString(1),
                     result.GetString(2)
                 ));

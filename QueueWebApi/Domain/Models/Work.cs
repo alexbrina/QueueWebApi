@@ -4,7 +4,7 @@ namespace QueueWebApi.Domain.Models
 {
     internal class Work
     {
-        public long Id { get; private set; }
+        public string Id { get; private set; }
         public string Status { get; private set; }
         public string Data { get; set; }
         public DateTimeOffset RequestedAt { get; private set; }
@@ -12,12 +12,12 @@ namespace QueueWebApi.Domain.Models
 
         public Work()
         {
-            Id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            Id = Nanoid.Nanoid.Generate();
             Status = "requested";
             RequestedAt = DateTimeOffset.Now;
         }
 
-        public Work(long id, string status, string data)
+        public Work(string id, string status, string data)
             : this()
         {
             Id = id;

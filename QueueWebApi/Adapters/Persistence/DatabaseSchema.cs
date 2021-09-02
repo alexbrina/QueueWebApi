@@ -15,7 +15,7 @@ namespace QueueWebApi.Adapters.Persistence
             using var command = conn.CreateCommand();
             command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS Work (
-                    Id INTEGER PRIMARY KEY,
+                    Id TEXT PRIMARY KEY,
                     Status TEXT,
                     Data TEXT,
                     RequestedAt TEXT,
