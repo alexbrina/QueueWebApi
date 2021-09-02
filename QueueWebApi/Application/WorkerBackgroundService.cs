@@ -74,7 +74,7 @@ namespace QueueWebApi.Application
                 using var trans = conn.BeginTransaction();
 
                 // here goes the real work ...
-                await Task.Delay(500, stoppingToken);
+                await Task.Delay(250, stoppingToken);
 
                 work.SetCompleted();
                 await repository.Update(work, conn);
