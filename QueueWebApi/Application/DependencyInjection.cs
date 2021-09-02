@@ -14,7 +14,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.AddSingleton(Channel.CreateUnbounded<Work>());
+            services.AddSingleton(Channel.CreateUnbounded<Work>(
+                new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false }));
             services.AddScoped<IWorkService, WorkService>();
             services.AddHostedService<WorkerBackgroundService>();
 

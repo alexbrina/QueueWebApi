@@ -80,12 +80,11 @@ namespace QueueWebApi.Application
                 await repository.Update(work, conn);
                 trans.Commit();
 
-                logger.LogInformation($"Work {work.Id} processed. {channel.Reader.Count} work(s) remaining.");
+                logger.LogInformation($"Work {work.Id} processed.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error processing work: {work.Id}");
-                // TODO ???
+                logger.LogError(ex, $"Error processing work {work.Id}");
             }
         }
     }
