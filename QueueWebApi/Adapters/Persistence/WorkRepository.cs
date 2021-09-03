@@ -24,15 +24,14 @@ namespace QueueWebApi.Adapters.Persistence
         /// <param name="work"></param>
         /// <param name="conn"></param>
         /// <returns></returns>
-        public Task Save(Work work, IDbConnection conn)
+        public Task SaveRequested(Work work, IDbConnection conn)
         {
             using var cmd = conn.CreateCommand();
 
-            cmd.CommandText = "INSERT INTO Work (Id, Status, Data, RequestedAt) " +
-                "VALUES (@id, @status, @data, @requestedAt)";
+            cmd.CommandText = "INSERT INTO WorkRequested (Id, Data, RequestedAt) " +
+                "VALUES (@id, @data, @requestedAt)";
 
             cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
-            cmd.Parameters.Add(new SqliteParameter("@status", work.Status));
             cmd.Parameters.Add(new SqliteParameter("@data", work.Data));
             cmd.Parameters.Add(new SqliteParameter("@requestedAt", work.RequestedAt));
 
@@ -42,21 +41,19 @@ namespace QueueWebApi.Adapters.Persistence
         }
 
         /// <summary>
-        /// Updates the status of an existing work
+        /// Set the status of an existing work to completed
         /// </summary>
         /// <remarks>Transaction must be controlled by caller</remarks>
         /// <param name="work"></param>
         /// <param name="conn"></param>
         /// <returns></returns>
-        public Task Update(Work work, IDbConnection conn)
+        public Task SetCompleted(Work work, IDbConnection conn)
         {
             using var cmd = conn.CreateCommand();
 
-            cmd.CommandText = "UPDATE Work SET Status = @status, " +
-                "CompletedAt = @completedAt WHERE Id = @id";
+            cmd.CommandText = "INSERT INTO WorkCompleted (Id, CompletedAt) VALUES (@id, @completedAt)";
 
             cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
-            cmd.Parameters.Add(new SqliteParameter("@status", work.Status));
             cmd.Parameters.Add(new SqliteParameter("@completedAt", work.CompletedAt));
 
             cmd.ExecuteNonQuery();
@@ -64,12 +61,14 @@ namespace QueueWebApi.Adapters.Persistence
             return Task.CompletedTask;
         }
 
-        public Task<IEnumerable<Work>> GetRequested()
+        public Task<IEnumerable<Work>> GetPending()
         {
-            using var conn = context.GetConnection();
+            using var conn = context.GetConnection(ConnectionTarget.WorkRequested);
+            var alias = context.Attach(conn, ConnectionTarget.WorkCompleted);
             
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Status, Data FROM Work WHERE Status = 'requested';";
+            cmd.CommandText = $"SELECT Id, Data FROM WorkRequested r WHERE NOT EXISTS " +
+                $"(SELECT 1 FROM {alias}.WorkCompleted c WHERE c.Id = r.Id);";
 
             conn.Open();
             using var result = cmd.ExecuteReader();
@@ -79,8 +78,7 @@ namespace QueueWebApi.Adapters.Persistence
             {
                 works.Add(new Work(
                     result.GetString(0),
-                    result.GetString(1),
-                    result.GetString(2)
+                    result.GetString(1)
                 ));
             }
 

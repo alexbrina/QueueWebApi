@@ -27,10 +27,10 @@ namespace QueueWebApi.Application
         {
             var work = new Work { Data = request.Data };
 
-            using var conn = unitOfWork.GetConnection();
+            using var conn = unitOfWork.GetConnection(ConnectionTarget.WorkRequested);
             conn.Open();
             using var trans = conn.BeginTransaction();
-            await repository.Save(work, conn);
+            await repository.SaveRequested(work, conn);
             await channel.Writer.WriteAsync(work);
             trans.Commit();
         }

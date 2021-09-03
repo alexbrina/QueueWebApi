@@ -32,8 +32,8 @@ namespace QueueWebApi.Application
 
             stoppingToken.Register(() => logger.LogDebug($"{nameof(WorkerBackgroundService)} is stopping."));
 
-            logger.LogDebug($"{nameof(WorkerBackgroundService)} is loading requested works.");
-            await LoadRequestedWorks(stoppingToken);
+            logger.LogDebug($"{nameof(WorkerBackgroundService)} is loading pending works.");
+            await LoadPendingWorks(stoppingToken);
 
             logger.LogDebug($"{nameof(WorkerBackgroundService)} is processing requested works.");
             await ProcessWorks(stoppingToken);
@@ -41,11 +41,11 @@ namespace QueueWebApi.Application
             logger.LogDebug($"{nameof(WorkerBackgroundService)} stopped.");
         }
 
-        private async Task LoadRequestedWorks(CancellationToken stoppingToken)
+        private async Task LoadPendingWorks(CancellationToken stoppingToken)
         {
             using var scope = provider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IWorkRepository>();
-            var works = await repository.GetRequested();
+            var works = await repository.GetPending();
             foreach (var work in works)
             {
                 await channel.Writer.WriteAsync(work, stoppingToken);
@@ -69,7 +69,7 @@ namespace QueueWebApi.Application
                 var repository = scope.ServiceProvider.GetRequiredService<IWorkRepository>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                using var conn = unitOfWork.GetConnection();
+                using var conn = unitOfWork.GetConnection(ConnectionTarget.WorkCompleted);
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
@@ -77,7 +77,7 @@ namespace QueueWebApi.Application
                 await Task.Delay(250, stoppingToken);
 
                 work.SetCompleted();
-                await repository.Update(work, conn);
+                await repository.SetCompleted(work, conn);
                 trans.Commit();
 
                 logger.LogInformation($"Work {work.Id} processed.");

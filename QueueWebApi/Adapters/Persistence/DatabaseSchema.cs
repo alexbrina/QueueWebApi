@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using QueueWebApi.Domain.Adapters;
+using System.Data;
 
 namespace QueueWebApi.Adapters.Persistence
 {
@@ -6,19 +7,32 @@ namespace QueueWebApi.Adapters.Persistence
     {
         public static void Setup(IDbContext context)
         {
-            using var conn = context.GetConnection();
-            CreateRequestTable(conn);
+            CreateRequestedTable(context);
+            CreateCompletedTable(context);
         }
 
-        private static void CreateRequestTable(IDbConnection conn)
+        private static void CreateRequestedTable(IDbContext context)
         {
+            using var conn = context.GetConnection(ConnectionTarget.WorkRequested);
             using var command = conn.CreateCommand();
             command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS Work (
+                CREATE TABLE IF NOT EXISTS WorkRequested (
                     Id TEXT PRIMARY KEY,
-                    Status TEXT,
                     Data TEXT,
-                    RequestedAt TEXT,
+                    RequestedAt TEXT
+                )";
+
+            conn.Open();
+            command.ExecuteNonQuery();
+        }
+
+        private static void CreateCompletedTable(IDbContext context)
+        {
+            using var conn = context.GetConnection(ConnectionTarget.WorkCompleted);
+            using var command = conn.CreateCommand();
+            command.CommandText = @"
+                CREATE TABLE IF NOT EXISTS WorkCompleted (
+                    Id TEXT PRIMARY KEY,
                     CompletedAt TEXT
                 )";
 
