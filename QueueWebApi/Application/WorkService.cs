@@ -27,12 +27,10 @@ namespace QueueWebApi.Application
         {
             var work = new Work { Data = request.Data };
 
-            using var conn = unitOfWork.GetConnection(ConnectionTarget.WorkRequested);
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            await repository.SaveRequested(work, conn);
+            // when persisting requested work we should not make it dependent of channel
+            // publishing success, it is better to save the request no matter what happens next
+            await repository.SaveRequested(work);
             await channel.Writer.WriteAsync(work);
-            trans.Commit();
         }
     }
 }

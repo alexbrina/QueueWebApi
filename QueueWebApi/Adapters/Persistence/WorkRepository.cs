@@ -24,8 +24,9 @@ namespace QueueWebApi.Adapters.Persistence
         /// <param name="work"></param>
         /// <param name="conn"></param>
         /// <returns></returns>
-        public Task SaveRequested(Work work, IDbConnection conn)
+        public Task SaveRequested(Work work)
         {
+            using var conn = context.GetConnection(ConnectionTarget.WorkRequested);
             using var cmd = conn.CreateCommand();
 
             cmd.CommandText = "INSERT INTO WorkRequested (Id, Data, RequestedAt) " +
@@ -35,6 +36,7 @@ namespace QueueWebApi.Adapters.Persistence
             cmd.Parameters.Add(new SqliteParameter("@data", work.Data));
             cmd.Parameters.Add(new SqliteParameter("@requestedAt", work.RequestedAt));
 
+            conn.Open();
             cmd.ExecuteNonQuery();
 
             return Task.CompletedTask;

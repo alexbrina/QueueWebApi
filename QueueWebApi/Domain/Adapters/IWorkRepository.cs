@@ -7,7 +7,7 @@ namespace QueueWebApi.Domain.Adapters
 {
     internal interface IWorkRepository
     {
-        Task SaveRequested(Work work, IDbConnection conn);
+        Task SaveRequested(Work work);
 
         Task SetCompleted(Work work, IDbConnection conn);
 
