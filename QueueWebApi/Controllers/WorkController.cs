@@ -15,5 +15,8 @@ namespace QueueWebApi.Controllers
             await service.Execute(request);
             return Ok();
         }
+
+        [HttpGet]
+        public IActionResult Health() => Ok();
     }
 }
