@@ -12,14 +12,13 @@ namespace QueueWebApi.Application
 {
     internal class LoaderService
     {
-        private readonly ChannelWriter<Work> writer;
+        private readonly Channel<Work> channel;
         private readonly IServiceProvider provider;
         private readonly ILogger<LoaderService> logger;
 
-        public LoaderService(
-            ChannelWriter<Work> writer, IServiceProvider provider, ILoggerFactory loggerFactory)
+        public LoaderService(Channel<Work> channel, IServiceProvider provider, ILoggerFactory loggerFactory)
         {
-            this.writer = writer;
+            this.channel = channel;
             this.provider = provider;
             logger = loggerFactory.CreateLogger<LoaderService>();
         }
@@ -37,10 +36,21 @@ namespace QueueWebApi.Application
 
                 logger.LogDebug($"{nameof(LoaderService)} found {works.Count()} works pending.");
 
-                foreach (var work in works)
+                if (works.Any())
                 {
-                    logger.LogTrace($"Loading pending work {work.Id}.");
-                    await writer.WriteAsync(work, stoppingToken);
+                    // we clear this channel before reloading it to avoid putting the same pending
+                    // works many times repeatedly. we can do this because we know that all works
+                    // are persisted as soon as they arive.
+                    var cleared = await channel.Clear(stoppingToken);
+                    logger.LogDebug($"{nameof(LoaderService)} cleared {cleared} previously loaded works.");
+
+                    foreach (var work in works)
+                    {
+                        logger.LogTrace($"Loading pending work {work.Id}.");
+                        await channel.Writer.WriteAsync(work, stoppingToken);
+                    }
+
+                    logger.LogDebug($"{nameof(LoaderService)} loaded all pending works.");
                 }
             }
             catch (Exception ex)

@@ -36,7 +36,7 @@ if ($status -eq "failed")
 }
 
 # run tests
-D:\AP\k6\k6 run --vus 10 --duration 5s .\script.js
+D:\AP\k6\k6 run --vus 100 --duration 10s .\script.js
 
 # wait key press to close api
 Write-Output "Finished running load test!"

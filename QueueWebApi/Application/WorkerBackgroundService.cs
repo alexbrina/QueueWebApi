@@ -47,7 +47,7 @@ namespace QueueWebApi.Application
 
         private void StartLoader(CancellationToken stoppingToken)
         {
-            var loader = new LoaderService(channel.Writer, provider, loggerFactory);
+            var loader = new LoaderService(channel, provider, loggerFactory);
 
             // async void should be avoided due to exception handling (if you don't have a task to
             // wrap your work, it is a bit harder to collect exceptions ocurred inside that code)

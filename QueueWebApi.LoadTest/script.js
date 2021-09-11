@@ -1,7 +1,8 @@
 import http from 'k6/http';
 
+var url = __ENV.SUT_URL || 'http://localhost:5000/Work';
+
 export default function () {
-  var url = 'http://localhost:5000/Work';
   var payload = JSON.stringify({
     data: new Date()
   });

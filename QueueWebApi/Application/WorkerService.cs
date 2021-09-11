@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using QueueWebApi.Domain.Adapters;
+using QueueWebApi.Domain.Exceptions;
 using QueueWebApi.Domain.Models;
 using System;
 using System.Threading;
@@ -39,7 +40,7 @@ namespace QueueWebApi.Application
         {
             try
             {
-                // TODO: create deduplication logic somewhere, here and/or LoaderService
+                logger.LogInformation($"Worker {workerId} processing Work {work.Id}.");
 
                 var repository = scope.ServiceProvider.GetRequiredService<IWorkRepository>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
@@ -54,13 +55,17 @@ namespace QueueWebApi.Application
                 // different tables in the same database. There's always a trade off in context!
                 using var trans = conn.BeginTransaction();
 
-                await Task.Delay(500, stoppingToken); // here goes the real work ...
+                await Task.Delay(100, stoppingToken); // here goes the real work ...
 
                 work.SetCompleted();
                 await repository.SetCompleted(work, conn);
                 trans.Commit();
-
-                logger.LogInformation($"Work {work.Id} processed by worker {workerId}.");
+            }
+            catch (WorkCompletedException)
+            {
+                // deduplication logic here, we ignore if repository reports work as already completed
+                // this is mandatory because we cannot garantee that a work won't be queued 2+ times
+                logger.LogDebug($"Worker {workerId} tried to complete already completed Work {work.Id}");
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using QueueWebApi.Domain.Adapters;
+using QueueWebApi.Domain.Exceptions;
 using QueueWebApi.Domain.Models;
 using System.Collections.Generic;
 using System.Data;
@@ -11,6 +12,9 @@ namespace QueueWebApi.Adapters.Persistence
     internal sealed class WorkRepository : IWorkRepository
     {
         private readonly IDbContext context;
+
+        // https://www.sqlite.org/rescode.html#constraint_primarykey
+        private const int SQLITE_CONSTRAINT_PRIMARYKEY = 1555;
 
         public WorkRepository(IDbContext context)
         {
@@ -44,23 +48,41 @@ namespace QueueWebApi.Adapters.Persistence
         /// <returns></returns>
         public Task SetCompleted(Work work, IDbConnection conn)
         {
-            using var cmd = conn.CreateCommand();
+            try
+            {
+                using var cmd = conn.CreateCommand();
 
-            cmd.CommandText = "INSERT INTO WorkCompleted (Id, CompletedAt) VALUES (@id, @completedAt)";
+                cmd.CommandText = "INSERT INTO WorkCompleted (Id, CompletedAt) VALUES (@id, @completedAt)";
 
-            cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
-            cmd.Parameters.Add(new SqliteParameter("@completedAt", work.CompletedAt));
+                cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
+                cmd.Parameters.Add(new SqliteParameter("@completedAt", work.CompletedAt));
 
-            cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery();
 
-            return Task.CompletedTask;
+                return Task.CompletedTask;
+            }
+            catch (SqliteException ex)
+            {
+                if (ex.SqliteExtendedErrorCode == SQLITE_CONSTRAINT_PRIMARYKEY)
+                {
+                    // in case of a pk error we send back a more meaningful exception to domain.
+                    // we could simply ignore it here, but it is kind of a domain concern so
+                    // it is better let the domain decide for itself.
+                    // we could return some error codes to express this cenario, but I see
+                    // exceptions as a more versatile way of expressing exceptional paths.
+                    // I care less about that "don't use exceptions for control flow" stuff.
+                    // it applies indeed, but in different degrees of abuse!
+                    throw new WorkCompletedException(ex);
+                }
+                throw;
+            }
         }
 
         public Task<IEnumerable<Work>> GetPending()
         {
             using var conn = context.GetConnection(ConnectionTarget.WorkRequested);
             var alias = context.Attach(conn, ConnectionTarget.WorkCompleted);
-            
+
             using var cmd = conn.CreateCommand();
             cmd.CommandText = $"SELECT Id, Data FROM WorkRequested r WHERE NOT EXISTS " +
                 $"(SELECT 1 FROM {alias}.WorkCompleted c WHERE c.Id = r.Id);";
