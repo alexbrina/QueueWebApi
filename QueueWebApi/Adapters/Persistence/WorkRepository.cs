@@ -17,13 +17,6 @@ namespace QueueWebApi.Adapters.Persistence
             this.context = context ?? throw new System.ArgumentNullException(nameof(context));
         }
 
-        /// <summary>
-        /// Saves a new work request
-        /// </summary>
-        /// <remarks>Transaction must be controlled by caller</remarks>
-        /// <param name="work"></param>
-        /// <param name="conn"></param>
-        /// <returns></returns>
         public Task SaveRequested(Work work)
         {
             using var conn = context.GetConnection(ConnectionTarget.WorkRequested);

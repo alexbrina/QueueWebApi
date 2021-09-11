@@ -20,7 +20,7 @@ function Get-ApiStatus {
 # =============================================================================
 
 # start api
-$sut = Start-Process -FilePath "dotnet" -ArgumentList "run" -WorkingDirectory "$PSScriptRoot/../QueueWebApi" -PassThru
+$sut = Start-Process -FilePath "dotnet" -ArgumentList "run" -WorkingDirectory "$PSScriptRoot/../QueueWebApi" -PassThru -RedirectStandardOutput "__output.log"
 
 # wait ready status
 $counter = 0
@@ -42,4 +42,4 @@ D:\AP\k6\k6 run --vus 10 --duration 5s .\script.js
 Write-Output "Finished running load test!"
 Write-Host -NoNewLine 'Press any key to continue...';
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
-Stop-Process $sut.Id
+Stop-Process $sut.Id 
