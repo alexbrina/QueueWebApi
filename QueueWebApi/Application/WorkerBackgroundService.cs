@@ -28,15 +28,19 @@ namespace QueueWebApi.Application
             IServiceProvider provider,
             ILoggerFactory loggerFactory)
         {
-            this.channel = channel ?? throw new System.ArgumentNullException(nameof(channel));
-            this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            this.channel = channel
+                ?? throw new System.ArgumentNullException(nameof(channel));
+            this.provider = provider
+                ?? throw new ArgumentNullException(nameof(provider));
+            this.loggerFactory = loggerFactory
+                ?? throw new ArgumentNullException(nameof(loggerFactory));
             logger = loggerFactory.CreateLogger<WorkerBackgroundService>();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            stoppingToken.Register(() => logger.LogDebug($"{nameof(WorkerBackgroundService)} is stopping."));
+            stoppingToken.Register(() => 
+                logger.LogDebug($"{nameof(WorkerBackgroundService)} is stopping."));
 
             StartLoader(stoppingToken);
             await StartWorkers(stoppingToken);
@@ -49,14 +53,17 @@ namespace QueueWebApi.Application
         {
             var loader = new LoaderService(channel, provider, loggerFactory);
 
-            // async void should be avoided due to exception handling (if you don't have a task to
-            // wrap your work, it is a bit harder to collect exceptions ocurred inside that code)
-            // but async void is need when dealing with event handlers.
-            // as stated in this link below, there's a good practice to follow in this case.
+            // async void should be avoided due to exception handling (if you
+            // don't have a task to wrap your work, an exceptions ocurred inside
+            // that code will kill main process). But when dealing with event
+            // handlers you need void return method, for that you can wrap your
+            // async call as stated in this link below.
             // https://docs.microsoft.com/en-us/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming#avoid-async-void
-            async void handler(object? obj) => await loader.Run(stoppingToken);
+            async Task asyncHandler() => await loader.Run(stoppingToken);
+            void handler(object? obj) => _ = asyncHandler();
 
-            timer = new Timer(handler, null, TimeSpan.Zero, TimeSpan.FromSeconds(LOAD_INTERVAL_SECONDS));
+            timer = new Timer(handler, null, TimeSpan.Zero,
+                TimeSpan.FromSeconds(LOAD_INTERVAL_SECONDS));
         }
 
         private async Task StartWorkers(CancellationToken stoppingToken)
@@ -67,7 +74,8 @@ namespace QueueWebApi.Application
 
             // run parallel workers
             var workers = Enumerable.Range(1, NUMBER_OF_PARALLEL_WORKERS)
-                .Select(i => new WorkerService(i, channel.Reader, scope, loggerFactory).Run(stoppingToken))
+                .Select(i => new WorkerService(
+                    i, channel.Reader, scope, loggerFactory).Run(stoppingToken))
                 .ToArray();
 
             await Task.WhenAll(workers);
