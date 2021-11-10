@@ -16,7 +16,8 @@ namespace ResilientWebApi.Application
         private readonly IServiceProvider provider;
         private readonly ILogger<LoaderService> logger;
 
-        public LoaderService(Channel<Work> channel, IServiceProvider provider, ILoggerFactory loggerFactory)
+        public LoaderService(Channel<Work> channel, IServiceProvider provider,
+            ILoggerFactory loggerFactory)
         {
             this.channel = channel;
             this.provider = provider;
@@ -34,15 +35,18 @@ namespace ResilientWebApi.Application
                 var repository = scope.ServiceProvider.GetRequiredService<IWorkRepository>();
                 var works = await repository.GetPending();
 
-                logger.LogDebug($"{nameof(LoaderService)} found {works.Count()} works pending.");
+                logger.LogDebug($"{nameof(LoaderService)} found " +
+                    $"{works.Count()} works pending.");
 
                 if (works.Any())
                 {
-                    // we clear this channel before reloading it to avoid putting the same pending
-                    // works many times repeatedly. we can do this because we know that all works
+                    // we clear this channel before reloading it to avoid
+                    // putting the same pending works many times repeatedly.
+                    // we can do this because we know that all works
                     // are persisted as soon as they arive.
                     var cleared = await channel.Clear(stoppingToken);
-                    logger.LogDebug($"{nameof(LoaderService)} cleared {cleared} previously loaded works.");
+                    logger.LogDebug($"{nameof(LoaderService)} cleared " +
+                        $"{cleared} previously loaded works.");
 
                     foreach (var work in works)
                     {

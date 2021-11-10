@@ -18,7 +18,8 @@ namespace ResilientWebApi.Application
         private readonly ILogger<WorkerService> logger;
 
         public WorkerService(
-            int workerId, ChannelReader<Work> reader, IServiceScope scope, ILoggerFactory loggerFactory)
+            int workerId, ChannelReader<Work> reader, IServiceScope scope,
+            ILoggerFactory loggerFactory)
         {
             this.workerId = workerId;
             this.reader = reader;
@@ -48,11 +49,13 @@ namespace ResilientWebApi.Application
                 using var conn = unitOfWork.GetConnection(ConnectionTarget.WorkCompleted);
                 conn.Open();
 
-                // by using a transaction you are actually creating a lock point for all workers
-                // to compete for. The beavior will depend on how your dbms works, in Sqlite for
-                // instance, it will lock the entire db file, so all workers will be serialized.
-                // on the other hand, a transaction will be desirable if you are updating
-                // different tables in the same database. There's always a trade off in context!
+                // by using a transaction here you are actually creating a lock point
+                // for all workers to compete for. The beavior will depend on how
+                // your dbms works, in Sqlite for instance, it will lock the entire
+                // db file, so all workers will be serialized. On the other hand,
+                // a transaction will be desirable if you are updating different
+                // tables (in the same database) and want it to be an atomic
+                // operation. There's always a trade off!
                 using var trans = conn.BeginTransaction();
 
                 await Task.Delay(100, stoppingToken); // here goes the real work ...
@@ -63,9 +66,12 @@ namespace ResilientWebApi.Application
             }
             catch (WorkCompletedException)
             {
-                // deduplication logic here, we ignore if repository reports work as already completed
-                // this is mandatory because we cannot garantee that a work won't be queued 2+ times
-                logger.LogDebug($"Worker {workerId} tried to complete already completed Work {work.Id}");
+                // Deduplication logic is ALWAYS required!
+                // In our case, we ignore if repository reports work as already
+                // completed. This is mandatory because we cannot guarantee that
+                // the same work won't be queued 2+ times.
+                logger.LogDebug($"Worker {workerId} tried to complete already " +
+                    $"completed Work {work.Id}");
             }
             catch (Exception ex)
             {

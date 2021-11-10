@@ -14,7 +14,11 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(services));
             }
 
-            var channelOptions = new UnboundedChannelOptions() { SingleReader = false, SingleWriter = false };
+            var channelOptions = new UnboundedChannelOptions()
+            {
+                SingleReader = false,
+                SingleWriter = false
+            };
 
             services.AddSingleton(Channel.CreateUnbounded<Work>(channelOptions));
             services.AddScoped<IWorkUseCase, WorkUseCase>();

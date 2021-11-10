@@ -2,6 +2,7 @@
 using ResilientWebApi.Domain.Adapters;
 using ResilientWebApi.Domain.Exceptions;
 using ResilientWebApi.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace ResilientWebApi.Adapters.Persistence
 
         public WorkRepository(IDbContext context)
         {
-            this.context = context ?? throw new System.ArgumentNullException(nameof(context));
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public Task SaveRequested(Work work)
@@ -52,7 +53,8 @@ namespace ResilientWebApi.Adapters.Persistence
             {
                 using var cmd = conn.CreateCommand();
 
-                cmd.CommandText = "INSERT INTO WorkCompleted (Id, CompletedAt) VALUES (@id, @completedAt)";
+                cmd.CommandText = "INSERT INTO WorkCompleted (Id, CompletedAt) " +
+                    "VALUES (@id, @completedAt)";
 
                 cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
                 cmd.Parameters.Add(new SqliteParameter("@completedAt", work.CompletedAt));
@@ -65,13 +67,16 @@ namespace ResilientWebApi.Adapters.Persistence
             {
                 if (ex.SqliteExtendedErrorCode == SQLITE_CONSTRAINT_PRIMARYKEY)
                 {
-                    // in case of a pk error we send back a more meaningful exception to domain.
-                    // we could simply ignore it here, but it is kind of a domain concern so
-                    // it is better let the domain decide for itself.
-                    // we could return some error codes to express this cenario, but I see
-                    // exceptions as a more versatile way of expressing exceptional paths.
-                    // I care less about that "don't use exceptions for control flow" stuff.
-                    // it applies indeed, but in different degrees of abuse!
+                    // in case of a pk error we send back a more meaningful
+                    // exception to domain. We could simply ignore it here, but
+                    // it is kind of a domain concern so it is better let the
+                    // domain decide for itself.
+                    // We could return some error codes to express this cenario,
+                    // but I see exceptions as a more versatile way of expressing
+                    // exceptional paths.
+                    // I care less about that "don't use exceptions for control
+                    // flow" stuff. It's a legitimate claim indeed, but in a
+                    // different degree of abuse!
                     throw new WorkCompletedException(ex);
                 }
                 throw;

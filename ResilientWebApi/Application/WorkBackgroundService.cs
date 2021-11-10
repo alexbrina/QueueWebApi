@@ -29,7 +29,7 @@ namespace ResilientWebApi.Application
             ILoggerFactory loggerFactory)
         {
             this.channel = channel
-                ?? throw new System.ArgumentNullException(nameof(channel));
+                ?? throw new ArgumentNullException(nameof(channel));
             this.provider = provider
                 ?? throw new ArgumentNullException(nameof(provider));
             this.loggerFactory = loggerFactory
@@ -68,8 +68,8 @@ namespace ResilientWebApi.Application
 
         private async Task StartWorkers(CancellationToken stoppingToken)
         {
-            // instantiating the scope here will make the same services instances be reused
-            // by all consumers
+            // instantiating the scope here will make the same services
+            // instances be reused by all consumers
             using var scope = provider.CreateScope();
 
             // run parallel workers

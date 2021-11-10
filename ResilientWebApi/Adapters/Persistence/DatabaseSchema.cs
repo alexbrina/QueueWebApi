@@ -1,5 +1,4 @@
 ﻿using ResilientWebApi.Domain.Adapters;
-using System.Data;
 
 namespace ResilientWebApi.Adapters.Persistence
 {
