@@ -1,4 +1,4 @@
-# QueueWebApi
+# ResilientWebApi
 
 This is a simple ASP.NET Core application with an in-process implementation of the Producer/Consumer pattern.
 
