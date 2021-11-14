@@ -22,6 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.AddSingleton(Channel.CreateUnbounded<Work>(channelOptions));
             services.AddScoped<IWorkUseCase, WorkUseCase>();
+            services.AddScoped<IWorkOperator, WorkOperator>();
             services.AddHostedService<WorkBackgroundService>();
 
             return services;

@@ -20,7 +20,7 @@ namespace ResilientWebApi.Application
         private readonly ILogger<WorkBackgroundService> logger;
 
         private const int NUMBER_OF_PARALLEL_WORKERS = 3;
-        private const int LOAD_INTERVAL_SECONDS = 30;
+        private const int LOAD_INTERVAL_SECONDS = 60;
         private Timer? timer;
 
         public WorkBackgroundService(
