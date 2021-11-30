@@ -1,14 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31624.102
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResilientWebApi", "ResilientWebApi\ResilientWebApi.csproj", "{D27994A5-2AF9-4789-932B-4CBE32BAADCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resilient.WebApi", "Resilient.WebApi\Resilient.WebApi.csproj", "{D27994A5-2AF9-4789-932B-4CBE32BAADCE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8C25F531-4A45-4662-B9A6-768E69C5FCCF}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resilient.Domain", "Resilient.Domain\Resilient.Domain.csproj", "{0BD12CCD-9D53-4041-9FF1-8890D4E82B79}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resilient.Application", "Resilient.Application\Resilient.Application.csproj", "{A96DF013-4C2B-4AA9-8020-C4233C75629A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resilient.Adapters.Storage", "Resilient.Adapters.Storage\Resilient.Adapters.Storage.csproj", "{0599D12A-96D9-4A40-9A88-33372E8948C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +26,18 @@ Global
 		{D27994A5-2AF9-4789-932B-4CBE32BAADCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D27994A5-2AF9-4789-932B-4CBE32BAADCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D27994A5-2AF9-4789-932B-4CBE32BAADCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BD12CCD-9D53-4041-9FF1-8890D4E82B79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BD12CCD-9D53-4041-9FF1-8890D4E82B79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BD12CCD-9D53-4041-9FF1-8890D4E82B79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BD12CCD-9D53-4041-9FF1-8890D4E82B79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A96DF013-4C2B-4AA9-8020-C4233C75629A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A96DF013-4C2B-4AA9-8020-C4233C75629A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A96DF013-4C2B-4AA9-8020-C4233C75629A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A96DF013-4C2B-4AA9-8020-C4233C75629A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0599D12A-96D9-4A40-9A88-33372E8948C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0599D12A-96D9-4A40-9A88-33372E8948C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0599D12A-96D9-4A40-9A88-33372E8948C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0599D12A-96D9-4A40-9A88-33372E8948C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

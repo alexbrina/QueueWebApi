@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Resilient.Application\Resilient.Application.csproj" />
+    <ProjectReference Include="..\Resilient.Adapters.Storage\Resilient.Adapters.Storage.csproj" />
+  </ItemGroup>
+
+</Project>
