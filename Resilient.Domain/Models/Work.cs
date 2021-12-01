@@ -11,7 +11,7 @@ namespace Resilient.Domain.Models
 
         public Work()
         {
-            Id = Nanoid.Nanoid.Generate();
+            Id = Identity.Generate();
             RequestedAt = DateTimeOffset.Now;
         }
 
