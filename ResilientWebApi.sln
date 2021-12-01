@@ -8,6 +8,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8C25F531-4A45-4662-B9A6-768E69C5FCCF}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resilient.Domain", "Resilient.Domain\Resilient.Domain.csproj", "{0BD12CCD-9D53-4041-9FF1-8890D4E82B79}"

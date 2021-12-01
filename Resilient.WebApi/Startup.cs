@@ -17,9 +17,9 @@ namespace Resilient.WebApi
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddStorageAdapter();
-            services.AddApplication();
             services.AddWebApi();
+            services.AddApplication();
+            services.AddStorageAdapter();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -32,8 +32,6 @@ namespace Resilient.WebApi
             }
 
             app.UseRouting();
-
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

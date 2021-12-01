@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Resilient.Application;
 using System.Threading.Tasks;
 
@@ -9,14 +10,18 @@ namespace Resilient.WebApi.Controllers
     public class WorkController : ControllerBase
     {
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status202Accepted)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Post(WorkRequest request,
-            [FromServices] IWorkUseCase service)
+            [FromServices] IWorkUseCase useCase)
         {
-            await service.Execute(request);
-            return Ok();
+            await useCase.Execute(request);
+            return Accepted();
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult Health() => Ok();
     }
 }
