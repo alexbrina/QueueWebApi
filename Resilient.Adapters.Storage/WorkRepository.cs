@@ -14,28 +14,45 @@ namespace Resilient.Adapters.Storage
     {
         private readonly IDbContext context;
 
-        // https://www.sqlite.org/rescode.html#constraint_primarykey
-        private const int SQLITE_CONSTRAINT_PRIMARYKEY = 1555;
-
         public WorkRepository(IDbContext context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        /// <summary>
+        /// Save requested work for async execution
+        /// </summary>
+        /// <remarks>Here we show an example of the Outbox Pattern, used to
+        /// control the work execution and set its completion only if related
+        /// operation(s) succeed.
+        /// These operations could be publishing a message, calling a HTTP or
+        /// SOAP API, or any other type of remote service call</remarks>
+        /// <param name="work"></param>
+        /// <returns></returns>
         public Task SaveRequested(Work work)
         {
-            using var conn = context.GetConnection(ConnectionTarget.WorkRequested);
-            using var cmd = conn.CreateCommand();
+            using var conn = context.GetConnection(ConnectionTarget.Work);
+            context.Attach(conn, ConnectionTarget.WorkOutbox);
 
-            cmd.CommandText = "INSERT INTO WorkRequested (Id, Data, RequestedAt) " +
-                "VALUES (@id, @data, @requestedAt)";
+            using var wCmd = conn.CreateCommand();
+            wCmd.CommandText = "INSERT INTO Work (Id, Data) VALUES (@id, @data)";
+            wCmd.Parameters.Add(new SqliteParameter("@id", work.Id));
+            wCmd.Parameters.Add(new SqliteParameter("@data", work.Data));
 
-            cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
-            cmd.Parameters.Add(new SqliteParameter("@data", work.Data));
-            cmd.Parameters.Add(new SqliteParameter("@requestedAt", work.RequestedAt));
+            using var oCmd = conn.CreateCommand();
+            oCmd.CommandText = "INSERT INTO WorkOutbox (Id, RequestedAt) " +
+                "VALUES (@id, @requestedAt)";
+            oCmd.Parameters.Add(new SqliteParameter("@id", work.Id));
+            oCmd.Parameters.Add(new SqliteParameter("@requestedAt", work.RequestedAt));
 
             conn.Open();
-            cmd.ExecuteNonQuery();
+
+            using var trans = conn.BeginTransaction();
+            wCmd.Transaction = trans;
+            wCmd.ExecuteNonQuery();
+            oCmd.Transaction = trans;
+            oCmd.ExecuteNonQuery();
+            trans.Commit();
 
             return Task.CompletedTask;
         }
@@ -43,54 +60,73 @@ namespace Resilient.Adapters.Storage
         /// <summary>
         /// Set the status of an existing work to completed
         /// </summary>
-        /// <remarks>Transaction must be controlled by caller</remarks>
+        /// <remarks>Transaction is controlled by caller</remarks>
         /// <param name="work"></param>
         /// <param name="conn"></param>
         /// <returns></returns>
-        public Task SetCompleted(Work work, IDbConnection conn)
+        public Task SetCompleted(Work work, IDbConnection conn, IDbTransaction trans)
         {
-            try
+            using var cmd = conn.CreateCommand();
+            cmd.Transaction = trans;
+
+            // updates only if not already completed
+            cmd.CommandText = @"
+                UPDATE WorkOutbox
+                   SET CompletedAt = @completedAt
+                 WHERE Id = @id
+                   AND CompletedAt IS NULL";
+
+            cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
+            cmd.Parameters.Add(new SqliteParameter("@completedAt", work.CompletedAt));
+            var affected = cmd.ExecuteNonQuery();
+
+            if (affected == 0)
             {
-                using var cmd = conn.CreateCommand();
-
-                cmd.CommandText = "INSERT INTO WorkCompleted (Id, CompletedAt) " +
-                    "VALUES (@id, @completedAt)";
-
-                cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
-                cmd.Parameters.Add(new SqliteParameter("@completedAt", work.CompletedAt));
-
-                cmd.ExecuteNonQuery();
-
-                return Task.CompletedTask;
+                CouldNotUpdateWorkState(work, conn);
             }
-            catch (SqliteException ex)
+
+            return Task.CompletedTask;
+        }
+
+        private static void CouldNotUpdateWorkState(Work work, IDbConnection conn)
+        {
+            // we check if a record for this work exists so we know for
+            // sure that it is already completed and then we can send
+            // back a meaningful exception to domain.
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT count(1) FROM WorkOutbox WHERE Id = @id";
+            cmd.Parameters.Add(new SqliteParameter("@id", work.Id));
+            var count = (Int64)cmd.ExecuteScalar();
+            if (count == 1)
             {
-                if (ex.SqliteExtendedErrorCode == SQLITE_CONSTRAINT_PRIMARYKEY)
-                {
-                    // in case of a pk error we send back a more meaningful
-                    // exception to domain. We could simply ignore it here, but
-                    // it is kind of a domain concern so it is better let the
-                    // domain decide for itself.
-                    // We could return some error codes to express this cenario,
-                    // but I see exceptions as a more versatile way of expressing
-                    // exceptional paths.
-                    // I care less about that "don't use exceptions for control
-                    // flow" stuff. It's a legitimate claim indeed, but in a
-                    // different degree of abuse!
-                    throw new WorkCompletedException(ex);
-                }
-                throw;
+                // we could simply ignore it here, but it is kind of a domain
+                // concern so we let the domain decide for itself.
+
+                // we could also return some error code to express this cenario,
+                // but I see exceptions as a more versatile way of expressing
+                // exceptional paths.
+                // I know about "don't use exceptions for control flow" stuff.
+                // It's a legitimate claim indeed, but it applies in a
+                // different degree of abuse!
+                throw new WorkCompletedException();
             }
+
+            // if it gets here, we are missing the outbox record for this work
+            // due to same storage inconsistency
+            throw new MissingWorkExecutionStateException();
         }
 
         public Task<IEnumerable<Work>> GetPending()
         {
-            using var conn = context.GetConnection(ConnectionTarget.WorkRequested);
-            var alias = context.Attach(conn, ConnectionTarget.WorkCompleted);
+            using var conn = context.GetConnection(ConnectionTarget.Work);
+            var alias = context.Attach(conn, ConnectionTarget.WorkOutbox);
 
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = $"SELECT Id, Data FROM WorkRequested r WHERE NOT EXISTS " +
-                $"(SELECT 1 FROM {alias}.WorkCompleted c WHERE c.Id = r.Id);";
+            cmd.CommandText = $@"
+                SELECT w.Id, w.Data
+                  FROM Work w
+                  JOIN {alias}.WorkOutbox o ON o.Id = w.Id
+                 WHERE o.CompletedAt IS NULL;";
 
             conn.Open();
             using var result = cmd.ExecuteReader();

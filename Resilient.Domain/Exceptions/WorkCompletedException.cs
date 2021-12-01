@@ -8,8 +8,8 @@ namespace Resilient.Domain.Exceptions
     {
         private const string message = "Work already completed.";
 
-        public WorkCompletedException(Exception innerException)
-            : base(message, innerException)
+        public WorkCompletedException()
+            : base(message)
         {
         }
 

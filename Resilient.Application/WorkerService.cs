@@ -47,20 +47,30 @@ namespace Resilient.Application
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var workOperator = scope.ServiceProvider.GetRequiredService<IWorkOperator>();
 
-                using var conn = unitOfWork.GetConnection(ConnectionTarget.WorkCompleted);
+                using var conn = unitOfWork.GetConnection(ConnectionTarget.WorkOutbox);
                 conn.Open();
 
                 // notice that, by using a db transaction you are creating a global
                 // lock point, so all your workers will be serialized in this point.
-                // On the other hand, a transaction will be desirable if you are
+                // On the other hand, a transaction is desirable if you are
                 // updating 2+ different tables (in the same database) and want
-                // it to be an atomic operation.
+                // it to be an atomic operation, or, if you want to make database
+                // commit dependent of some other operation (which is the case
+                // in this example).
                 using var trans = conn.BeginTransaction();
 
-                await workOperator.Execute(work, stoppingToken);
-
+                // first we try setting it to completed, it will fail if already
+                // completed. This is our deduplication strategy
                 work.SetCompleted();
-                await repository.SetCompleted(work, conn);
+                await repository.SetCompleted(work, conn, trans);
+
+                // then we execute the operation inside transaction.
+                // Be cautious, it can be a problem if the operation is too
+                // expensive, because all workers will be blocked waiting for
+                // this transaction to finish. Tradeoffs!
+                await workOperator.Execute(work, workerId, stoppingToken);
+
+                // if everything is ok we commit!
                 trans.Commit();
             }
             catch (WorkCompletedException)

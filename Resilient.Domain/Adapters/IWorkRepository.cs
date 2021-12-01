@@ -9,7 +9,7 @@ namespace Resilient.Domain.Adapters
     {
         Task SaveRequested(Work work);
 
-        Task SetCompleted(Work work, IDbConnection conn);
+        Task SetCompleted(Work work, IDbConnection conn, IDbTransaction trans);
 
         Task<IEnumerable<Work>> GetPending();
     }

@@ -9,7 +9,7 @@ namespace Resilient.Domain.Adapters
 
     internal enum ConnectionTarget
     {
-        WorkRequested = 1,
-        WorkCompleted = 2
+        Work = 1,
+        WorkOutbox = 2
     }
 }
