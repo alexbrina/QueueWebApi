@@ -19,6 +19,21 @@ function Get-ApiStatus {
 # Main
 # =============================================================================
 
+# build api
+$build = Start-Process -FilePath "dotnet" -ArgumentList "build" -WorkingDirectory "$PSScriptRoot/../Resilient.WebApi" -PassThru -RedirectStandardOutput "__build.log" -Wait
+
+# evaluate success/failure
+if($build.ExitCode -eq 0)
+{
+    # Success
+}
+else
+{
+    # Failure
+    Write-Error "Could not build api"
+    return
+}
+
 # start api
 $sut = Start-Process -FilePath "dotnet" -ArgumentList "run" -WorkingDirectory "$PSScriptRoot/../Resilient.WebApi" -PassThru -RedirectStandardOutput "__output.log"
 
