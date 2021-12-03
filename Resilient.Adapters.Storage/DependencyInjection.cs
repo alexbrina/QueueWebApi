@@ -13,11 +13,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.AddScoped<IWorkRepository, WorkRepository>();
             services.AddScoped<IUnitOfWork, SqliteDbContext>();
             services.AddScoped<IDbContext, SqliteDbContext>();
 
-            // ensure local file database and table
+            services.AddScoped<IWorkRepository, WorkRepositoryBetterApproach>();
             DatabaseSchema.Setup(new SqliteDbContext());
 
             return services;

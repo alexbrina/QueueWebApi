@@ -17,7 +17,8 @@ namespace Resilient.Adapters.Storage
             command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS Work (
                     Id TEXT PRIMARY KEY,
-                    Data TEXT
+                    Data TEXT,
+                    RequestedAt TEXT
                 )";
 
             conn.Open();
@@ -31,7 +32,6 @@ namespace Resilient.Adapters.Storage
             command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS WorkOutbox (
                     Id TEXT PRIMARY KEY,
-                    RequestedAt TEXT,
                     CompletedAt TEXT
                 )";
 
