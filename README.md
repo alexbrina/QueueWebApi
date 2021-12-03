@@ -1,5 +1,7 @@
 # ResilientWebApi
 
-This is a simple ASP.NET Core application with an in-process implementation of the Producer/Consumer pattern.
+This is a simple example of a resilient ASP.NET Core API with asynchronous processing of requests.
 
-It uses [System.Threading.Channels](https://docs.microsoft.com/en-us/dotnet/api/system.threading.channels) apis as a mean to decouple requests from their actual processing.
+It uses an in-process implementation of Producer/Consumer Pattern, and two slightly different approaches of the Outbox Pattern.
+
+In addition, we show simple implementation of a Retry Policy.
