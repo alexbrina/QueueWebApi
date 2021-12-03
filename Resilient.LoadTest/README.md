@@ -1,4 +1,5 @@
-# Testing Queue Behavior
+# Load Testing
 
-Running basic test using https://k6.io/
+Running basic load test using https://k6.io/
 
+Move to this directory and simply call .\run.ps1 to execute a load of parallel requests
